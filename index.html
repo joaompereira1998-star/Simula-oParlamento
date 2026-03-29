@@ -3,296 +3,803 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulação Parlamento — Dashboard</title>
-
+  <title>Simulação do Parlamento — Modo CNN Claro</title>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f9fafb;
+      background: #f8fafc;
       color: #111827;
+      min-height: 100vh;
     }
 
     .container {
-      max-width: 1500px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 18px;
     }
 
     .header {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 14px;
     }
 
     .header h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      letter-spacing: 0.3px;
+    }
+
+    .header p {
       margin: 0;
-      font-size: 1.8rem;
+      color: #475569;
+      font-size: 1rem;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 16px 0 20px;
     }
 
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 12px;
+    .top-bar button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 0.92rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: #111827;
+      color: white;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      transition: all 0.25s ease;
+    }
+
+    .top-bar button:hover {
+      opacity: 0.94;
+    }
+
+    .tv-layout {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .main-stage {
+      border-radius: 26px;
+      padding: 16px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+      position: sticky;
+      top: 12px;
+      min-height: calc(100vh - 110px);
+    }
+
+    .stage-card {
+      height: 100%;
+      min-height: 700px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #f8fafc, #eef2f7);
+      border: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 26px;
       position: relative;
+      overflow: hidden;
+      transition: background 0.25s ease, border-color 0.25s ease;
     }
 
-    .card.active {
-      transform: scale(1.1);
-      z-index: 10;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    .stage-card.running {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      border-color: #22c55e;
     }
 
-    .card.dimmed {
-      opacity: 0.4;
+    .stage-card.danger {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border-color: #ef4444;
     }
 
-    .card.running {
-      background: #dcfce7;
+    .stage-card.finished {
+      background: linear-gradient(135deg, #e5e7eb 0%, #cbd5e1 100%);
+      border-color: #64748b;
     }
 
-    .card.danger {
-      background: #fee2e2;
+    .live-badge {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #dc2626;
+      color: white;
+      font-weight: 800;
+      font-size: 0.88rem;
+      padding: 8px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
     }
 
-    .card.finished {
-      background: #e5e7eb;
-    }
-
-    .top {
+    .stage-top {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 18px;
     }
 
-    .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
+    .stage-logo {
+      width: 110px;
+      height: 110px;
+      border-radius: 22px;
       background: white;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
     }
 
-    .logo img {
+    .stage-logo img {
       width: 100%;
       height: 100%;
       object-fit: contain;
     }
 
-    .name {
+    .stage-logo-fallback {
+      color: #111827;
+      font-size: 1.6rem;
       font-weight: bold;
-      font-size: 1rem;
     }
 
-    .timer {
+    .stage-meta {
+      min-width: 0;
+    }
+
+    .stage-label {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #475569;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .stage-party {
+      font-size: clamp(2.3rem, 5vw, 4.4rem);
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 10px;
+      color: #111827;
+    }
+
+    .stage-total {
+      font-size: 1.08rem;
+      color: #334155;
+    }
+
+    .stage-center {
       text-align: center;
-      font-size: 2rem;
-      font-weight: bold;
-      margin: 8px 0;
+      padding: 20px 0;
     }
 
-    .controls {
+    .stage-timer {
+      font-size: clamp(4.4rem, 11vw, 8.2rem);
+      font-weight: 900;
+      letter-spacing: 3px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      color: #0f172a;
+    }
+
+    .stage-status {
+      margin-top: 16px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #334155;
+    }
+
+    .stage-progress-track {
+      width: 100%;
+      height: 18px;
+      background: rgba(148, 163, 184, 0.28);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+
+    .stage-progress-bar {
+      height: 100%;
+      width: 100%;
+      background: #0f172a;
+      border-radius: 999px;
+      transition: width 0.2s linear;
+    }
+
+    .stage-card.running .stage-progress-bar {
+      background: #16a34a;
+    }
+
+    .stage-card.danger .stage-progress-bar {
+      background: #dc2626;
+    }
+
+    .stage-card.finished .stage-progress-bar {
+      background: #475569;
+    }
+
+    .stage-note {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 1rem;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .side-panel {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .mini-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 12px;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .mini-card.running {
+      background: #dcfce7;
+      border-color: #22c55e;
+    }
+
+    .mini-card.danger {
+      background: #fee2e2;
+      border-color: #ef4444;
+    }
+
+    .mini-card.finished {
+      background: #e5e7eb;
+      border-color: #94a3b8;
+    }
+
+    .mini-card.dimmed {
+      opacity: 0.48;
+    }
+
+    .mini-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .mini-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: white;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid #e5e7eb;
+    }
+
+    .mini-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .mini-party {
+      font-size: 1.08rem;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #111827;
+    }
+
+    .mini-total {
+      font-size: 0.86rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .mini-timer {
+      font-size: 1.9rem;
+      font-weight: 900;
+      text-align: center;
+      margin: 8px 0 10px;
+      font-variant-numeric: tabular-nums;
+      color: #111827;
+    }
+
+    .mini-progress-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .mini-progress-bar {
+      height: 100%;
+      width: 100%;
+      background: #0f172a;
+      transition: width 0.2s linear;
+      border-radius: 999px;
+    }
+
+    .mini-card.running .mini-progress-bar {
+      background: #16a34a;
+    }
+
+    .mini-card.danger .mini-progress-bar {
+      background: #dc2626;
+    }
+
+    .mini-card.finished .mini-progress-bar {
+      background: #64748b;
+    }
+
+    .mini-controls {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 4px;
+      gap: 6px;
     }
 
-    .controls button {
+    .mini-controls button {
       border: none;
-      border-radius: 8px;
-      padding: 6px;
-      font-size: 0.7rem;
-      font-weight: bold;
+      border-radius: 10px;
+      padding: 8px 6px;
+      font-size: 0.76rem;
+      font-weight: 800;
       cursor: pointer;
     }
 
-    .start { background: #16a34a; color: white; }
-    .stop { background: #111827; color: white; }
-    .reset { background: #d1d5db; }
-    .adj { background: #dbeafe; }
+    .start-btn {
+      background: #16a34a;
+      color: white;
+    }
+
+    .stop-btn {
+      background: #111827;
+      color: white;
+    }
+
+    .reset-btn {
+      background: #d1d5db;
+      color: #111827;
+    }
+
+    .minus-btn,
+    .plus-btn {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .mini-status {
+      margin-top: 8px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 0.84rem;
+      color: #475569;
+      min-height: 18px;
+    }
+
+    @media (max-width: 1300px) {
+      .tv-layout {
+        grid-template-columns: 1.2fr 1fr;
+      }
+
+      .stage-card {
+        min-height: 640px;
+      }
+    }
 
     @media (max-width: 1100px) {
-      .grid { grid-template-columns: repeat(3, 1fr); }
+      .tv-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .main-stage {
+        position: static;
+        min-height: unset;
+      }
+
+      .side-panel {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 700px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
+      .stage-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .stage-logo {
+        width: 90px;
+        height: 90px;
+      }
+
+      .side-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-controls {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .mini-controls button:last-child {
+        grid-column: span 2;
+      }
     }
   </style>
 </head>
-
 <body>
-<div class="container">
-  <div class="header">
-    <h1>Simulação do Parlamento</h1>
+  <div class="container">
+    <div class="header">
+      <h1>Simulação do Parlamento Português</h1>
+      <p>Modo CNN — painel principal claro com todos os tempos visíveis</p>
+    </div>
+
+    <div class="top-bar">
+      <button onclick="startAll()">Iniciar todos</button>
+      <button onclick="stopAll()">Parar todos</button>
+      <button onclick="resetAll()">Repor todos</button>
+    </div>
+
+    <div class="tv-layout">
+      <section class="main-stage">
+        <div class="stage-card" id="stageCard">
+          <div class="live-badge">EM DIRETO</div>
+
+          <div class="stage-top">
+            <div class="stage-logo" id="stageLogoBox">
+              <span class="stage-logo-fallback">—</span>
+            </div>
+            <div class="stage-meta">
+              <div class="stage-label">Parlamento</div>
+              <div class="stage-party" id="stageParty">A aguardar orador</div>
+              <div class="stage-total" id="stageTotal">Seleciona um partido e carrega em iniciar</div>
+            </div>
+          </div>
+
+          <div class="stage-center">
+            <div class="stage-timer" id="stageTimer">00:00</div>
+            <div class="stage-status" id="stageStatus">Sem intervenção ativa</div>
+          </div>
+
+          <div>
+            <div class="stage-progress-track">
+              <div class="stage-progress-bar" id="stageProgress"></div>
+            </div>
+            <div class="stage-note" id="stageNote">Todos os restantes tempos mantêm-se visíveis no painel à direita.</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-panel" id="timersGrid"></aside>
+    </div>
   </div>
 
-  <div class="grid" id="grid"></div>
-</div>
+  <script>
+    const parties = [
+      { key: "gov", label: "GOV", minutes: 26, logo: "gov.png" },
+      { key: "psd", label: "PSD", minutes: 26, logo: "psd.png" },
+      { key: "ch", label: "CH", minutes: 22, logo: "ch.png" },
+      { key: "ps", label: "PS", minutes: 21, logo: "ps.png" },
+      { key: "il", label: "IL", minutes: 10, logo: "il.png" },
+      { key: "l", label: "L", minutes: 8, logo: "l.png" },
+      { key: "pcp", label: "PCP", minutes: 6, logo: "pcp.png" },
+      { key: "cdspp", label: "CDS-PP", minutes: 5, logo: "cdspp.png" },
+      { key: "be", label: "BE", minutes: 2, logo: "be.png" },
+      { key: "pan", label: "PAN", minutes: 2, logo: "pan.png" },
+      { key: "jpp", label: "JPP", minutes: 2, logo: "jpp.png" }
+    ];
 
-<script>
-const parties = [
-  { key:"gov", label:"GOV", min:26, logo:"gov.png"},
-  { key:"psd", label:"PSD", min:26, logo:"psd.png"},
-  { key:"ch", label:"CH", min:22, logo:"ch.png"},
-  { key:"ps", label:"PS", min:21, logo:"ps.png"},
-  { key:"il", label:"IL", min:10, logo:"il.png"},
-  { key:"l", label:"L", min:8, logo:"l.png"},
-  { key:"pcp", label:"PCP", min:6, logo:"pcp.png"},
-  { key:"cdspp", label:"CDS-PP", min:5, logo:"cdspp.png"},
-  { key:"be", label:"BE", min:2, logo:"be.png"},
-  { key:"pan", label:"PAN", min:2, logo:"pan.png"},
-  { key:"jpp", label:"JPP", min:2, logo:"jpp.png"}
-];
+    const state = {};
+    let activeSpeakerKey = null;
 
-const state = {};
-let active = null;
+    function formatTime(totalSeconds) {
+      const safe = Math.max(0, totalSeconds);
+      const mins = Math.floor(safe / 60);
+      const secs = safe % 60;
+      return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+    }
 
-function fmt(s){
-  let m = Math.floor(s/60);
-  let sec = s%60;
-  return String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
-}
+    function createTimerCard(party) {
+      const totalSeconds = party.minutes * 60;
 
-function beep(times){
-  let ctx = new (window.AudioContext||window.webkitAudioContext)();
-  for(let i=0;i<times;i++){
-    let o=ctx.createOscillator();
-    let g=ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.frequency.value=800;
-    o.start(ctx.currentTime+i*0.3);
-    o.stop(ctx.currentTime+i*0.3+0.2);
-  }
-}
+      state[party.key] = {
+        totalSeconds,
+        remainingSeconds: totalSeconds,
+        running: false,
+        interval: null,
+        oneMinuteBeeped: false,
+        thirtySecondBeeped: false
+      };
 
-function render(){
-  let grid=document.getElementById("grid");
+      const card = document.createElement("div");
+      card.className = "mini-card";
+      card.id = `card-${party.key}`;
 
-  parties.forEach(p=>{
-    let total=p.min*60;
-
-    state[p.key]={
-      total,
-      rem:total,
-      run:false,
-      i:null,
-      b1:false,
-      b2:false
-    };
-
-    let div=document.createElement("div");
-    div.className="card";
-    div.id="c-"+p.key;
-
-    div.innerHTML=`
-      <div class="top">
-        <div class="logo">
-          <img src="${p.logo}" onerror="this.style.display='none'">
+      card.innerHTML = `
+        <div class="mini-top">
+          <div class="mini-logo">
+            <img src="${party.logo}" alt="${party.label}" onerror="this.style.display='none'; this.parentNode.innerHTML='<span style=&quot;color:#111827;font-weight:bold;&quot;>${party.label}</span>';">
+          </div>
+          <div>
+            <div class="mini-party">${party.label}</div>
+            <div class="mini-total">Tempo total: ${party.minutes} min</div>
+          </div>
         </div>
-        <div class="name">${p.label}</div>
-      </div>
 
-      <div class="timer" id="t-${p.key}">${fmt(total)}</div>
+        <div class="mini-timer" id="display-${party.key}">${formatTime(totalSeconds)}</div>
 
-      <div class="controls">
-        <button class="start" onclick="start('${p.key}')">▶</button>
-        <button class="stop" onclick="stop('${p.key}')">⏸</button>
-        <button class="reset" onclick="resetT('${p.key}')">↺</button>
-        <button class="adj" onclick="adj('${p.key}',-30)">-30</button>
-        <button class="adj" onclick="adj('${p.key}',30)">+30</button>
-      </div>
-    `;
+        <div class="mini-progress-track">
+          <div class="mini-progress-bar" id="progress-${party.key}"></div>
+        </div>
 
-    grid.appendChild(div);
-  });
-}
+        <div class="mini-controls">
+          <button class="start-btn" onclick="startTimer('${party.key}')">Iniciar</button>
+          <button class="stop-btn" onclick="stopTimer('${party.key}')">Parar</button>
+          <button class="reset-btn" onclick="resetTimer('${party.key}')">Repor</button>
+          <button class="minus-btn" onclick="adjustTimer('${party.key}', -30)">-30s</button>
+          <button class="plus-btn" onclick="adjustTimer('${party.key}', 30)">+30s</button>
+        </div>
 
-function update(k){
-  let s=state[k];
-  document.getElementById("t-"+k).textContent=fmt(s.rem);
+        <div class="mini-status" id="status-${party.key}">Pronto</div>
+      `;
 
-  let card=document.getElementById("c-"+k);
-  card.className="card";
+      return card;
+    }
 
-  if(active===k) card.classList.add("active");
+    function renderTimers() {
+      const grid = document.getElementById("timersGrid");
+      parties.forEach(party => {
+        grid.appendChild(createTimerCard(party));
+      });
+    }
 
-  if(active && active!==k) card.classList.add("dimmed");
+    function playBeep(times = 1) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
 
-  if(s.rem<=0){
-    card.classList.add("finished");
-  } else if(s.rem<=60){
-    card.classList.add("danger");
-  } else if(s.run){
-    card.classList.add("running");
-  }
-}
+      const ctx = new AudioContextClass();
 
-function tick(k){
-  let s=state[k];
-  if(!s.run) return;
+      for (let i = 0; i < times; i++) {
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
 
-  s.rem--;
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, ctx.currentTime + i * 0.28);
 
-  if(s.rem<=60 && !s.b1){ beep(1); s.b1=true; }
-  if(s.rem<=30 && !s.b2){ beep(2); s.b2=true; }
+        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.28);
+        gainNode.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + i * 0.28 + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.28 + 0.18);
 
-  if(s.rem<=0){
-    stop(k);
-    s.rem=0;
-  }
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
 
-  update(k);
-}
+        oscillator.start(ctx.currentTime + i * 0.28);
+        oscillator.stop(ctx.currentTime + i * 0.28 + 0.2);
+      }
+    }
 
-function start(k){
-  let s=state[k];
-  if(s.run) return;
+    function updateActiveSpeakerUI() {
+      parties.forEach(p => {
+        const card = document.getElementById(`card-${p.key}`);
+        card.classList.remove("dimmed");
+      });
 
-  active=k;
+      if (activeSpeakerKey) {
+        parties.forEach(p => {
+          const card = document.getElementById(`card-${p.key}`);
+          if (p.key !== activeSpeakerKey) {
+            card.classList.add("dimmed");
+          }
+        });
+      }
+    }
 
-  Object.keys(state).forEach(x=>update(x));
+    function updateStage() {
+      const stageCard = document.getElementById("stageCard");
+      const stageParty = document.getElementById("stageParty");
+      const stageTotal = document.getElementById("stageTotal");
+      const stageTimer = document.getElementById("stageTimer");
+      const stageStatus = document.getElementById("stageStatus");
+      const stageProgress = document.getElementById("stageProgress");
+      const stageNote = document.getElementById("stageNote");
+      const logoBox = document.getElementById("stageLogoBox");
 
-  s.run=true;
-  s.i=setInterval(()=>tick(k),1000);
-  update(k);
-}
+      stageCard.classList.remove("running", "danger", "finished");
 
-function stop(k){
-  let s=state[k];
-  s.run=false;
-  clearInterval(s.i);
-  update(k);
-}
+      if (!activeSpeakerKey) {
+        stageParty.textContent = "A aguardar orador";
+        stageTotal.textContent = "Seleciona um partido e carrega em iniciar";
+        stageTimer.textContent = "00:00";
+        stageStatus.textContent = "Sem intervenção ativa";
+        stageProgress.style.width = "0%";
+        stageNote.textContent = "Todos os restantes tempos mantêm-se visíveis no painel à direita.";
+        logoBox.innerHTML = `<span class="stage-logo-fallback">—</span>`;
+        return;
+      }
 
-function resetT(k){
-  stop(k);
-  let s=state[k];
-  s.rem=s.total;
-  s.b1=false;
-  s.b2=false;
-  update(k);
-}
+      const party = parties.find(p => p.key === activeSpeakerKey);
+      const timer = state[activeSpeakerKey];
+      const percent = (timer.remainingSeconds / timer.totalSeconds) * 100;
 
-function adj(k,d){
-  let s=state[k];
-  s.rem=Math.max(0,s.rem+d);
-  update(k);
-}
+      stageParty.textContent = party.label;
+      stageTotal.textContent = `Tempo total atribuído: ${party.minutes} min`;
+      stageTimer.textContent = formatTime(timer.remainingSeconds);
+      stageProgress.style.width = `${Math.max(0, percent)}%`;
 
-render();
-</script>
+      logoBox.innerHTML = `<img src="${party.logo}" alt="${party.label}" onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=&quot;stage-logo-fallback&quot;>${party.label}</span>';">`;
+
+      if (timer.remainingSeconds <= 0) {
+        stageCard.classList.add("finished");
+        stageStatus.textContent = "Tempo esgotado";
+        stageNote.textContent = `${party.label} terminou a intervenção.`;
+      } else if (timer.remainingSeconds <= 60) {
+        stageCard.classList.add("danger");
+        stageStatus.textContent = "Último minuto";
+        stageNote.textContent = `${party.label} está no último minuto da intervenção.`;
+      } else if (timer.running) {
+        stageCard.classList.add("running");
+        stageStatus.textContent = "Em contagem";
+        stageNote.textContent = `${party.label} está em uso da palavra.`;
+      } else {
+        stageStatus.textContent = "Parado";
+        stageNote.textContent = `${party.label} está selecionado, mas o relógio está parado.`;
+      }
+    }
+
+    function updateUI(key) {
+      const timer = state[key];
+      const display = document.getElementById(`display-${key}`);
+      const progress = document.getElementById(`progress-${key}`);
+      const status = document.getElementById(`status-${key}`);
+      const card = document.getElementById(`card-${key}`);
+
+      display.textContent = formatTime(timer.remainingSeconds);
+
+      const percent = (timer.remainingSeconds / timer.totalSeconds) * 100;
+      progress.style.width = `${Math.max(0, percent)}%`;
+
+      card.classList.remove("running", "danger", "finished");
+
+      if (timer.remainingSeconds <= 0) {
+        card.classList.add("finished");
+        status.textContent = "Tempo esgotado";
+      } else if (timer.remainingSeconds <= 60) {
+        card.classList.add("danger");
+        status.textContent = "Último minuto";
+      } else if (timer.running) {
+        card.classList.add("running");
+        status.textContent = "Em contagem";
+      } else {
+        status.textContent = "Parado";
+      }
+
+      updateStage();
+    }
+
+    function maybePlayAlerts(key) {
+      const timer = state[key];
+
+      if (timer.remainingSeconds <= 60 && !timer.oneMinuteBeeped) {
+        playBeep(1);
+        timer.oneMinuteBeeped = true;
+      }
+
+      if (timer.remainingSeconds <= 30 && !timer.thirtySecondBeeped) {
+        playBeep(2);
+        timer.thirtySecondBeeped = true;
+      }
+    }
+
+    function tick(key) {
+      const timer = state[key];
+      if (!timer.running) return;
+
+      if (timer.remainingSeconds > 0) {
+        timer.remainingSeconds -= 1;
+        maybePlayAlerts(key);
+        updateUI(key);
+      }
+
+      if (timer.remainingSeconds <= 0) {
+        stopTimer(key);
+        timer.remainingSeconds = 0;
+        updateUI(key);
+      }
+    }
+
+    function startTimer(key) {
+      const timer = state[key];
+      if (timer.running || timer.remainingSeconds <= 0) return;
+
+      activeSpeakerKey = key;
+      updateActiveSpeakerUI();
+
+      timer.running = true;
+      timer.interval = setInterval(() => tick(key), 1000);
+      updateUI(key);
+      updateStage();
+    }
+
+    function stopTimer(key) {
+      const timer = state[key];
+      timer.running = false;
+      clearInterval(timer.interval);
+      timer.interval = null;
+
+      updateUI(key);
+      updateStage();
+    }
+
+    function resetTimer(key) {
+      stopTimer(key);
+      const timer = state[key];
+      timer.remainingSeconds = timer.totalSeconds;
+      timer.oneMinuteBeeped = false;
+      timer.thirtySecondBeeped = false;
+
+      if (activeSpeakerKey === key) {
+        activeSpeakerKey = null;
+        updateActiveSpeakerUI();
+      }
+
+      updateUI(key);
+      updateStage();
+    }
+
+    function adjustTimer(key, delta) {
+      const timer = state[key];
+      timer.remainingSeconds = Math.max(0, timer.remainingSeconds + delta);
+
+      if (timer.remainingSeconds > 60) {
+        timer.oneMinuteBeeped = false;
+      }
+      if (timer.remainingSeconds > 30) {
+        timer.thirtySecondBeeped = false;
+      }
+
+      updateUI(key);
+    }
+
+    function startAll() {
+      parties.forEach(p => startTimer(p.key));
+    }
+
+    function stopAll() {
+      parties.forEach(p => stopTimer(p.key));
+    }
+
+    function resetAll() {
+      parties.forEach(p => resetTimer(p.key));
+      activeSpeakerKey = null;
+      updateActiveSpeakerUI();
+      updateStage();
+    }
+
+    renderTimers();
+    parties.forEach(p => updateUI(p.key));
+    updateActiveSpeakerUI();
+    updateStage();
+  </script>
 </body>
 </html>
