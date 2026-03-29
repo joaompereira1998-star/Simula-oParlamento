@@ -77,12 +77,8 @@
     }
 
     .timer-card.running {
-      border-color: #2563eb;
-    }
-
-    .timer-card.warning {
-      border-color: #f59e0b;
-      background: #fffaf0;
+      border-color: #16a34a;
+      background: #f0fdf4;
     }
 
     .timer-card.danger {
@@ -164,8 +160,8 @@
       transition: width 0.2s linear;
     }
 
-    .timer-card.warning .progress-bar {
-      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    .timer-card.running .progress-bar {
+      background: linear-gradient(90deg, #16a34a, #4ade80);
     }
 
     .timer-card.danger .progress-bar,
@@ -222,7 +218,8 @@
       min-height: 20px;
     }
 
-    .timer-card.finished .status {
+    .timer-card.finished .status,
+    .timer-card.danger .status {
       color: #b91c1c;
     }
 
@@ -255,17 +252,17 @@
 
   <script>
     const parties = [
-      { key: "gov", label: "GOV", minutes: 26, logo: "logos/gov.png" },
-      { key: "psd", label: "PSD", minutes: 26, logo: "logos/psd.png" },
-      { key: "ch", label: "CH", minutes: 22, logo: "logos/ch.png" },
-      { key: "ps", label: "PS", minutes: 21, logo: "logos/ps.png" },
-      { key: "il", label: "IL", minutes: 10, logo: "logos/il.png" },
-      { key: "l", label: "L", minutes: 8, logo: "logos/l.png" },
-      { key: "pcp", label: "PCP", minutes: 6, logo: "logos/pcp.png" },
-      { key: "cdspp", label: "CDS-PP", minutes: 5, logo: "logos/cdspp.png" },
-      { key: "be", label: "BE", minutes: 2, logo: "logos/be.png" },
-      { key: "pan", label: "PAN", minutes: 2, logo: "logos/pan.png" },
-      { key: "jpp", label: "JPP", minutes: 2, logo: "logos/jpp.png" }
+      { key: "gov", label: "GOV", minutes: 26, logo: "gov.png" },
+      { key: "psd", label: "PSD", minutes: 26, logo: "psd.png" },
+      { key: "ch", label: "CH", minutes: 22, logo: "ch.png" },
+      { key: "ps", label: "PS", minutes: 21, logo: "ps.png" },
+      { key: "il", label: "IL", minutes: 10, logo: "il.png" },
+      { key: "l", label: "L", minutes: 8, logo: "l.png" },
+      { key: "pcp", label: "PCP", minutes: 6, logo: "pcp.png" },
+      { key: "cdspp", label: "CDS-PP", minutes: 5, logo: "cdspp.png" },
+      { key: "be", label: "BE", minutes: 2, logo: "be.png" },
+      { key: "pan", label: "PAN", minutes: 2, logo: "pan.png" },
+      { key: "jpp", label: "JPP", minutes: 2, logo: "jpp.png" }
     ];
 
     const state = {};
@@ -341,25 +338,19 @@
       const percent = (timer.remainingSeconds / timer.totalSeconds) * 100;
       progress.style.width = `${Math.max(0, percent)}%`;
 
-      card.classList.remove("running", "warning", "danger", "finished");
+      card.classList.remove("running", "danger", "finished");
 
       if (timer.remainingSeconds <= 0) {
         card.classList.add("finished");
         status.textContent = "Tempo esgotado";
+      } else if (timer.remainingSeconds <= 60) {
+        card.classList.add("danger");
+        status.textContent = "Último minuto";
       } else if (timer.running) {
         card.classList.add("running");
         status.textContent = "Em contagem";
       } else {
         status.textContent = "Parado";
-      }
-
-      if (timer.remainingSeconds > 0 && timer.remainingSeconds <= 30) {
-        card.classList.remove("running");
-        card.classList.add("danger");
-        status.textContent = timer.running ? "Últimos 30 segundos" : "Últimos 30 segundos";
-      } else if (timer.remainingSeconds > 30 && timer.remainingSeconds <= 60) {
-        card.classList.add("warning");
-        status.textContent = timer.running ? "Último minuto" : "Último minuto";
       }
     }
 
