@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulação do Parlamento — Grelha de Tempos</title>
+  <title>Simulação do Parlamento — Modo TV</title>
   <style>
     * {
       box-sizing: border-box;
@@ -12,38 +12,41 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
+      background:
+        radial-gradient(circle at top, #1f2937 0%, #111827 35%, #030712 100%);
+      color: white;
+      min-height: 100vh;
     }
 
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 28px 20px 40px;
+      padding: 20px 20px 28px;
     }
 
     .header {
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 18px;
     }
 
     .header h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.8rem, 4vw, 3rem);
+      margin: 0 0 6px;
+      font-size: clamp(1.7rem, 4vw, 3rem);
+      letter-spacing: 0.5px;
     }
 
     .header p {
       margin: 0;
-      color: #4b5563;
+      color: rgba(255,255,255,0.75);
       font-size: 1rem;
     }
 
     .top-bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
-      margin: 24px 0 32px;
+      margin: 18px 0 24px;
     }
 
     .top-bar button {
@@ -53,148 +56,323 @@
       font-size: 0.95rem;
       font-weight: bold;
       cursor: pointer;
-      background: #111827;
+      background: #1f2937;
       color: white;
+      border: 1px solid rgba(255,255,255,0.12);
     }
 
     .top-bar button:hover {
       opacity: 0.92;
     }
 
-    .grid {
+    .tv-layout {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: 1.6fr 1fr;
       gap: 18px;
       align-items: start;
     }
 
-    .timer-card {
-      background: white;
-      border-radius: 22px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      padding: 18px;
-      border: 2px solid transparent;
-      transition:
-        transform 0.25s ease,
-        border-color 0.2s ease,
-        background 0.2s ease,
-        box-shadow 0.25s ease;
-      transform-origin: center;
+    .main-stage {
+      min-height: 72vh;
+      border-radius: 28px;
+      padding: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+      position: sticky;
+      top: 18px;
+      overflow: hidden;
+    }
+
+    .stage-card {
+      height: 100%;
+      min-height: 640px;
+      border-radius: 24px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 2px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28px;
       position: relative;
-      z-index: 1;
+      overflow: hidden;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
 
-    .timer-card.running {
-      border-color: #16a34a;
-      background: #f0fdf4;
+    .stage-card.running {
+      background: linear-gradient(135deg, #14532d 0%, #16a34a 55%, #22c55e 100%);
     }
 
-    .timer-card.active-speaker {
-      transform: scale(1.08);
-      box-shadow: 0 22px 55px rgba(0,0,0,0.18);
-      z-index: 20;
+    .stage-card.danger {
+      background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 55%, #ef4444 100%);
     }
 
-    .timer-card.danger {
-      border-color: #dc2626;
-      background: #fff5f5;
+    .stage-card.finished {
+      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
     }
 
-    .timer-card.finished {
-      border-color: #7f1d1d;
-      background: #fef2f2;
+    .live-badge {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #dc2626;
+      color: white;
+      font-weight: bold;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      border-radius: 999px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      letter-spacing: 0.5px;
     }
 
-    .card-top {
+    .stage-top {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 18px;
     }
 
-    .logo-box {
-      width: 58px;
-      height: 58px;
-      border-radius: 14px;
-      background: #f3f4f6;
+    .stage-logo {
+      width: 110px;
+      height: 110px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.92);
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
       flex-shrink: 0;
-      border: 1px solid #e5e7eb;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.18);
     }
 
-    .logo-box img {
+    .stage-logo img {
       width: 100%;
       height: 100%;
       object-fit: contain;
-      background: white;
     }
 
-    .party-info {
+    .stage-logo-fallback {
+      color: #111827;
+      font-size: 1.6rem;
+      font-weight: bold;
+    }
+
+    .stage-meta {
       min-width: 0;
     }
 
-    .party-name {
-      font-size: 1.4rem;
+    .stage-label {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.88;
+      margin-bottom: 6px;
       font-weight: bold;
-      line-height: 1.1;
-      margin-bottom: 4px;
     }
 
-    .party-total {
-      color: #4b5563;
-      font-size: 0.95rem;
+    .stage-party {
+      font-size: clamp(2.2rem, 5vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 10px;
     }
 
-    .timer-display {
-      font-size: clamp(2.2rem, 6vw, 3.5rem);
-      font-weight: bold;
+    .stage-total {
+      font-size: 1.1rem;
+      opacity: 0.92;
+    }
+
+    .stage-center {
+      padding: 10px 0 20px;
       text-align: center;
-      margin: 10px 0 16px;
-      letter-spacing: 1px;
-      font-variant-numeric: tabular-nums;
     }
 
-    .progress-track {
+    .stage-timer {
+      font-size: clamp(4rem, 11vw, 8rem);
+      font-weight: 900;
+      letter-spacing: 3px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    .stage-status {
+      margin-top: 14px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      opacity: 0.96;
+    }
+
+    .stage-progress-track {
       width: 100%;
-      height: 12px;
-      background: #e5e7eb;
+      height: 18px;
+      background: rgba(255,255,255,0.22);
       border-radius: 999px;
       overflow: hidden;
-      margin-bottom: 18px;
+      margin: 10px 0 20px;
     }
 
-    .progress-bar {
+    .stage-progress-bar {
       height: 100%;
       width: 100%;
-      background: linear-gradient(90deg, #2563eb, #60a5fa);
+      background: rgba(255,255,255,0.96);
       border-radius: 999px;
       transition: width 0.2s linear;
     }
 
-    .timer-card.running .progress-bar {
-      background: linear-gradient(90deg, #16a34a, #4ade80);
+    .ticker {
+      margin-top: 14px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      overflow: hidden;
     }
 
-    .timer-card.danger .progress-bar,
-    .timer-card.finished .progress-bar {
-      background: linear-gradient(90deg, #dc2626, #f87171);
+    .ticker-top {
+      display: grid;
+      grid-template-columns: 180px 1fr 140px;
+      align-items: center;
+      min-height: 68px;
     }
 
-    .controls {
+    .ticker-left {
+      background: #991b1b;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      letter-spacing: 1px;
+      font-size: 1rem;
+      text-transform: uppercase;
+    }
+
+    .ticker-main {
+      padding: 0 18px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      min-height: 68px;
+    }
+
+    .ticker-right {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.08);
+      font-weight: 800;
+      font-size: 1.1rem;
+      border-left: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mini-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 14px;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+
+    .mini-card.running {
+      background: rgba(34,197,94,0.18);
+      border-color: rgba(74,222,128,0.35);
+    }
+
+    .mini-card.danger {
+      background: rgba(239,68,68,0.18);
+      border-color: rgba(248,113,113,0.35);
+    }
+
+    .mini-card.finished {
+      background: rgba(17,24,39,0.9);
+    }
+
+    .mini-card.dimmed {
+      opacity: 0.45;
+    }
+
+    .mini-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .mini-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.95);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .mini-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .mini-party {
+      font-size: 1.2rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .mini-total {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .mini-timer {
+      font-size: 2rem;
+      font-weight: 900;
+      text-align: center;
+      margin: 8px 0 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mini-progress-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .mini-progress-bar {
+      height: 100%;
+      width: 100%;
+      background: rgba(255,255,255,0.92);
+      transition: width 0.2s linear;
+      border-radius: 999px;
+    }
+
+    .mini-controls {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
+      gap: 7px;
     }
 
-    .controls button {
+    .mini-controls button {
       border: none;
-      border-radius: 12px;
-      padding: 10px 8px;
-      font-size: 0.9rem;
-      font-weight: bold;
+      border-radius: 10px;
+      padding: 9px 6px;
+      font-size: 0.8rem;
+      font-weight: 800;
       cursor: pointer;
     }
 
@@ -209,7 +387,7 @@
     }
 
     .reset-btn {
-      background: #e5e7eb;
+      background: #d1d5db;
       color: #111827;
     }
 
@@ -219,35 +397,61 @@
       color: #1d4ed8;
     }
 
-    .controls button:hover {
-      opacity: 0.92;
-    }
-
-    .status {
-      margin-top: 12px;
+    .mini-status {
+      margin-top: 10px;
       text-align: center;
-      font-size: 0.92rem;
       font-weight: bold;
-      color: #374151;
-      min-height: 20px;
+      font-size: 0.88rem;
+      opacity: 0.95;
+      min-height: 18px;
     }
 
-    .timer-card.finished .status,
-    .timer-card.danger .status {
-      color: #b91c1c;
+    @media (max-width: 1200px) {
+      .tv-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .main-stage {
+        position: static;
+        min-height: unset;
+      }
+
+      .stage-card {
+        min-height: 560px;
+      }
     }
 
-    @media (max-width: 600px) {
-      .controls {
+    @media (max-width: 700px) {
+      .ticker-top {
+        grid-template-columns: 1fr;
+      }
+
+      .ticker-left,
+      .ticker-right {
+        min-height: 52px;
+      }
+
+      .ticker-main {
+        min-height: 70px;
+        font-size: 1.05rem;
+      }
+
+      .mini-controls {
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .controls button:last-child {
+      .mini-controls button:last-child {
         grid-column: span 2;
       }
 
-      .timer-card.active-speaker {
-        transform: scale(1.03);
+      .stage-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .stage-logo {
+        width: 90px;
+        height: 90px;
       }
     }
   </style>
@@ -256,7 +460,7 @@
   <div class="container">
     <div class="header">
       <h1>Simulação do Parlamento Português</h1>
-      <p>Grelha A — relógios individuais por partido / Governo</p>
+      <p>Modo TV — destaque do orador em direto</p>
     </div>
 
     <div class="top-bar">
@@ -265,7 +469,45 @@
       <button onclick="resetAll()">Repor todos</button>
     </div>
 
-    <div class="grid" id="timersGrid"></div>
+    <div class="tv-layout">
+      <section class="main-stage">
+        <div class="stage-card" id="stageCard">
+          <div class="live-badge">EM DIRETO</div>
+
+          <div class="stage-top">
+            <div class="stage-logo" id="stageLogoBox">
+              <span class="stage-logo-fallback">—</span>
+            </div>
+            <div class="stage-meta">
+              <div class="stage-label">Parlamento</div>
+              <div class="stage-party" id="stageParty">A aguardar orador</div>
+              <div class="stage-total" id="stageTotal">Seleciona um partido e carrega em iniciar</div>
+            </div>
+          </div>
+
+          <div class="stage-center">
+            <div class="stage-timer" id="stageTimer">00:00</div>
+            <div class="stage-status" id="stageStatus">Sem intervenção ativa</div>
+          </div>
+
+          <div>
+            <div class="stage-progress-track">
+              <div class="stage-progress-bar" id="stageProgress"></div>
+            </div>
+
+            <div class="ticker">
+              <div class="ticker-top">
+                <div class="ticker-left">Última Hora</div>
+                <div class="ticker-main" id="tickerMain">Sem partido em uso da palavra.</div>
+                <div class="ticker-right" id="tickerRight">OFF</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-panel" id="timersGrid"></aside>
+    </div>
   </div>
 
   <script>
@@ -306,27 +548,27 @@
       };
 
       const card = document.createElement("div");
-      card.className = "timer-card";
+      card.className = "mini-card";
       card.id = `card-${party.key}`;
 
       card.innerHTML = `
-        <div class="card-top">
-          <div class="logo-box">
-            <img src="${party.logo}" alt="${party.label}" onerror="this.style.display='none'; this.parentNode.innerHTML='<span style=&quot;font-weight:bold;font-size:0.95rem;color:#374151;&quot;>${party.label}</span>';">
+        <div class="mini-top">
+          <div class="mini-logo">
+            <img src="${party.logo}" alt="${party.label}" onerror="this.style.display='none'; this.parentNode.innerHTML='<span style=&quot;color:#111827;font-weight:bold;&quot;>${party.label}</span>';">
           </div>
-          <div class="party-info">
-            <div class="party-name">${party.label}</div>
-            <div class="party-total">Tempo total: ${party.minutes} min</div>
+          <div>
+            <div class="mini-party">${party.label}</div>
+            <div class="mini-total">Tempo total: ${party.minutes} min</div>
           </div>
         </div>
 
-        <div class="timer-display" id="display-${party.key}">${formatTime(totalSeconds)}</div>
+        <div class="mini-timer" id="display-${party.key}">${formatTime(totalSeconds)}</div>
 
-        <div class="progress-track">
-          <div class="progress-bar" id="progress-${party.key}"></div>
+        <div class="mini-progress-track">
+          <div class="mini-progress-bar" id="progress-${party.key}"></div>
         </div>
 
-        <div class="controls">
+        <div class="mini-controls">
           <button class="start-btn" onclick="startTimer('${party.key}')">Iniciar</button>
           <button class="stop-btn" onclick="stopTimer('${party.key}')">Parar</button>
           <button class="reset-btn" onclick="resetTimer('${party.key}')">Repor</button>
@@ -334,7 +576,7 @@
           <button class="plus-btn" onclick="adjustTimer('${party.key}', 30)">+30s</button>
         </div>
 
-        <div class="status" id="status-${party.key}">Pronto</div>
+        <div class="mini-status" id="status-${party.key}">Pronto</div>
       `;
 
       return card;
@@ -375,12 +617,75 @@
     function updateActiveSpeakerUI() {
       parties.forEach(p => {
         const card = document.getElementById(`card-${p.key}`);
-        card.classList.remove("active-speaker");
+        card.classList.remove("dimmed");
       });
 
       if (activeSpeakerKey) {
-        const activeCard = document.getElementById(`card-${activeSpeakerKey}`);
-        if (activeCard) activeCard.classList.add("active-speaker");
+        parties.forEach(p => {
+          const card = document.getElementById(`card-${p.key}`);
+          if (p.key !== activeSpeakerKey) {
+            card.classList.add("dimmed");
+          }
+        });
+      }
+    }
+
+    function updateStage() {
+      const stageCard = document.getElementById("stageCard");
+      const stageParty = document.getElementById("stageParty");
+      const stageTotal = document.getElementById("stageTotal");
+      const stageTimer = document.getElementById("stageTimer");
+      const stageStatus = document.getElementById("stageStatus");
+      const stageProgress = document.getElementById("stageProgress");
+      const tickerMain = document.getElementById("tickerMain");
+      const tickerRight = document.getElementById("tickerRight");
+      const logoBox = document.getElementById("stageLogoBox");
+
+      stageCard.classList.remove("running", "danger", "finished");
+
+      if (!activeSpeakerKey) {
+        stageParty.textContent = "A aguardar orador";
+        stageTotal.textContent = "Seleciona um partido e carrega em iniciar";
+        stageTimer.textContent = "00:00";
+        stageStatus.textContent = "Sem intervenção ativa";
+        stageProgress.style.width = "0%";
+        tickerMain.textContent = "Sem partido em uso da palavra.";
+        tickerRight.textContent = "OFF";
+        logoBox.innerHTML = `<span class="stage-logo-fallback">—</span>`;
+        return;
+      }
+
+      const party = parties.find(p => p.key === activeSpeakerKey);
+      const timer = state[activeSpeakerKey];
+
+      stageParty.textContent = party.label;
+      stageTotal.textContent = `Tempo total atribuído: ${party.minutes} min`;
+      stageTimer.textContent = formatTime(timer.remainingSeconds);
+
+      const percent = (timer.remainingSeconds / timer.totalSeconds) * 100;
+      stageProgress.style.width = `${Math.max(0, percent)}%`;
+
+      logoBox.innerHTML = `<img src="${party.logo}" alt="${party.label}" onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=&quot;stage-logo-fallback&quot;>${party.label}</span>';">`;
+
+      if (timer.remainingSeconds <= 0) {
+        stageCard.classList.add("finished");
+        stageStatus.textContent = "Tempo esgotado";
+        tickerMain.textContent = `${party.label} terminou a intervenção.`;
+        tickerRight.textContent = "FIM";
+      } else if (timer.remainingSeconds <= 60) {
+        stageCard.classList.add("danger");
+        stageStatus.textContent = "Último minuto";
+        tickerMain.textContent = `${party.label} está no último minuto da intervenção.`;
+        tickerRight.textContent = "ALERTA";
+      } else if (timer.running) {
+        stageCard.classList.add("running");
+        stageStatus.textContent = "Em contagem";
+        tickerMain.textContent = `${party.label} está em uso da palavra.`;
+        tickerRight.textContent = "LIVE";
+      } else {
+        stageStatus.textContent = "Parado";
+        tickerMain.textContent = `${party.label} está selecionado, mas o relógio está parado.`;
+        tickerRight.textContent = "PAUSA";
       }
     }
 
@@ -410,6 +715,8 @@
       } else {
         status.textContent = "Parado";
       }
+
+      updateStage();
     }
 
     function maybePlayAlerts(key) {
@@ -453,6 +760,7 @@
       timer.running = true;
       timer.interval = setInterval(() => tick(key), 1000);
       updateUI(key);
+      updateStage();
     }
 
     function stopTimer(key) {
@@ -462,8 +770,7 @@
       timer.interval = null;
 
       if (activeSpeakerKey === key) {
-        activeSpeakerKey = null;
-        updateActiveSpeakerUI();
+        updateStage();
       }
 
       updateUI(key);
@@ -502,11 +809,15 @@
 
     function resetAll() {
       parties.forEach(p => resetTimer(p.key));
+      activeSpeakerKey = null;
+      updateActiveSpeakerUI();
+      updateStage();
     }
 
     renderTimers();
     parties.forEach(p => updateUI(p.key));
     updateActiveSpeakerUI();
+    updateStage();
   </script>
 </body>
 </html>
